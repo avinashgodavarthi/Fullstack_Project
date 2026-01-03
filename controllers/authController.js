@@ -2,6 +2,10 @@ const User = require("../models/User")
 const bcrypt = require("bcryptjs");
 const { uploadToCloudinary } = require("../helpers/cloudinaryHelper");
 const fs = require("fs");
+var jwt = require("jsonwebtoken")
+
+
+// for register user//
 
 const registerUser = async (req, res) => {
   try {
@@ -52,4 +56,35 @@ const registerUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser };
+
+
+
+// for login the user//
+
+var loginuser = async(req,res)=>{
+  try{
+    var{email,password} = req.body
+    var userexists = await User.findOne({email})
+    if(!userexists){
+      return res.status(200).json({message: "user not found"})
+    }
+
+    var ispassword = await bcrypt.compare(password,userexists.password)
+    if(!ispassword){
+      return res.status(200).json({message:"Incorrect Password"})
+    }
+
+    var token = jwt.sign({
+      id : userexists._id
+
+    },process.env.JWT_TOKEN,{expiresIn : "1d"})
+
+    res.status(200).json({message: "Login Successfull",Webtoken : token})
+
+  }
+  catch(error){
+    console.log("error",error);
+    
+  }
+}
+module.exports = { registerUser,loginuser };
